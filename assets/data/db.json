@@ -1,0 +1,84 @@
+{
+    "mobiles":[
+        {
+            "id": "1",
+            "brand": "SAMSUNG",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+
+        {
+            "id": "1",
+            "brand": "vivo",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+
+        {
+            "id": "1",
+            "brand": "OPPO",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+
+        {
+            "id": "1",
+            "brand": "realme",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+
+        {
+            "id": "1",
+            "brand": "POCO",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+
+        {
+            "id": "1",
+            "brand": "MOTOROLA",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+
+        {
+            "id": "1",
+            "brand": "htc",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        },
+        {
+            "id": "1",
+            "brand": "hcl",
+            "model": "F14 5G",
+            "ram": "4gb",
+            "screen":"16.76cm",
+            "battery": "600 mAh",
+            "processor": "Exynos"
+        }
+
+
+    ]
+}
