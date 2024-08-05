@@ -1,5 +1,4 @@
-const url =
-  'https://real-time-flipkart-api.p.rapidapi.com/products-by-category?category_id=tyy%2C4io&page=10';
+const url = 'https://real-time-flipkart-api.p.rapidapi.com/products-by-category?category_id=tyy%2C4io&page=10';
 const brandFilter = document.querySelector(".brand-bucket");
 const filterBox = document.querySelector(".filter-indicator-content");
 const clearBrandFilter = document.querySelector(".clear-brand-filter");
@@ -21,17 +20,13 @@ const count = document.querySelector(".count span");
 const ratingInputs = document.querySelectorAll(".rating-content-inner input");
 const ratingContent = document.querySelector('.rating-content');
 const ratingContent1 = document.querySelector('.rating-content1');
+const memoryContent = document.querySelector('.memory-content');
 
 let productsData = [];
 let filterBased = [];
 let priceRange = { min: 0, max: Infinity };
 let ratingRange = [];
-
-hider.addEventListener("click", function () {
-  hider.classList.toggle("active-modal");
-  brandMain.classList.toggle("hidden");
-  count.textContent = count.textContent === "6 MORE" ? "0 MORE" : "6 MORE";
-});
+let ramRange = [];
 
 hider1.addEventListener("click", function () {
   hider1.classList.toggle("active-modal");
@@ -45,6 +40,7 @@ hider2.addEventListener("click", function () {
 
 options.forEach((option) => {
   option.addEventListener("click", () => {
+    // Handle option click
     console.log(option.value);
   });
 });
@@ -90,26 +86,38 @@ ratingInputs.forEach((input) => {
 
 function createFilter(mobiles) {
   brandFilter.innerHTML = "";
+  memoryContent.innerHTML = "";
+  const memorySet = new Set();
   const brandSet = new Set();
 
   mobiles.forEach((mobile) => {
     if (!brandSet.has(mobile.brand)) {
       brandSet.add(mobile.brand);
-      const mobileticker = document.createElement("div");
-      mobileticker.classList.add("brand-name");
+      const mobileTicker = document.createElement("div");
+      mobileTicker.classList.add("brand-name");
 
-      const html = `
-        <label class="brand-label">
+      const html =
+        `<label class="brand-label">
           <input type="checkbox" class="checkbox" value="${mobile.brand}">
           <span class="brand-name-target">${mobile.brand}</span>
-        </label>
-      `;
-      mobileticker.insertAdjacentHTML("beforeend", html);
-      brandFilter.appendChild(mobileticker);
+        </label>`;
+
+      mobileTicker.insertAdjacentHTML("beforeend", html);
+      brandFilter.appendChild(mobileTicker);
+    }
+
+    const ram = mobile.highlights[0]?.slice(0, 5);
+    if (ram && !memorySet.has(ram)) {
+      memorySet.add(ram);
+      const html =
+        `<div class="memory-content-inner">
+          <input type="checkbox" class="checkbox" data-value='${mobile.highlights[0].slice(0, 1)}' value='${ram}'>
+          <span class="span">${ram}</span>
+        </div>`;
+      memoryContent.insertAdjacentHTML('beforeend', html);
     }
   });
 
-  // Add event listeners for filter checkboxes
   document.querySelectorAll(".checkbox").forEach((checkbox) => {
     checkbox.addEventListener("change", (e) => {
       const value = e.target.value;
@@ -124,12 +132,16 @@ function createFilter(mobiles) {
     });
   });
 
-  // Clear filters
   clearBrandFilter.addEventListener("click", () => clearFilters());
   clearFilter.addEventListener("click", () => clearFilters());
+
+  hider.addEventListener("click", function () {
+    hider.classList.toggle("active-modal");
+    brandMain.classList.toggle("hidden");
+    count.textContent = count.textContent === `${brandSet.size} MORE` ? "0 MORE" : `${brandSet.size} MORE`;
+  });
 }
 
-// Update rating range based on selected checkboxes
 function updateRatingRange() {
   ratingRange = [];
   ratingInputs.forEach(input => {
@@ -142,7 +154,6 @@ function updateRatingRange() {
   });
 }
 
-// Function to update filter display
 function updateFilters() {
   filterBox.innerHTML = "";
   filterIndicator.classList.remove("hidden");
@@ -153,10 +164,9 @@ function updateFilters() {
     const filter = document.createElement("div");
     filter.classList.add("filter");
     filter.setAttribute("data-brand", brand);
-    filter.innerHTML = `
-      <span class="close-btn">✕</span>
-      <span class="brand-name-1">${brand}</span>
-    `;
+    filter.innerHTML =
+      `<span class="close-btn">✕</span>
+      <span class="brand-name-1">${brand}</span>`;
     filterBox.appendChild(filter);
 
     filter.querySelector(".close-btn").addEventListener("click", () => {
@@ -171,12 +181,12 @@ function updateFilters() {
   applyFilters();
 }
 
-// Function to clear filters
 function clearFilters() {
   filterBox.innerHTML = "";
   filterBased = [];
   priceRange = { min: 0, max: Infinity };
   ratingRange = [];
+  ramRange = [];
   document.querySelectorAll(".checkbox").forEach((checkbox) => (checkbox.checked = false));
   document.querySelectorAll(".rating-content-inner input").forEach((input) => (input.checked = false));
   select.value = '';
@@ -184,32 +194,26 @@ function clearFilters() {
   applyFilters();
 }
 
-// Function to apply all filters
 function applyFilters() {
+  const ramMatch = highlights => highlights.some(hi => parseInt(hi) >= 6);
+
   const filteredMobiles = productsData.filter((mobile) => {
     const brandMatch = filterBased.length === 0 || filterBased.includes(mobile.brand);
     const priceMatch = mobile.price >= priceRange.min && mobile.price <= priceRange.max;
-    const ratingMatch = ratingRange.length === 0 || ratingRange.some(r => {
-      mobile.rating.average >= r
-      console.log(r)
-    });
+    const ramMatchResult = ramMatch(mobile.highlights);
 
-    console.log(ratingMatch)
-    
-    return brandMatch && priceMatch && ratingMatch;
+    return brandMatch && priceMatch && ramMatchResult;
   });
 
-  console.log('Filtered Mobiles:', filteredMobiles);
+  console.log(filteredMobiles);
   displayCards(filteredMobiles);
 }
 
-// Function to display product cards
 function displayCards(data) {
   mobileCard.innerHTML = "";
   data.forEach(createCard);
 }
 
-// Function to create a card for each product
 function createCard(result) {
   const ogPrice = result.mrp;
   const offPrice = result.price;
@@ -245,7 +249,7 @@ function createCard(result) {
               </div>
               <div class="mobile-features">
                 <ul>
-                  ${result.highlights.map((h) => `<li class="points">${h}</li>`).join("")}
+                  ${result.highlights.map(h => `<li class="points">${h}</li>`).join("")}
                 </ul>
               </div>
             </div>
@@ -263,12 +267,11 @@ function createCard(result) {
           </div>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
+
   mobileCard.insertAdjacentHTML("beforeend", html);
 }
 
-// Sorting functions
 function sortDescending() {
   const sortedProducts = [...productsData].sort((a, b) => b.price - a.price);
   displayCards(sortedProducts);
@@ -279,11 +282,9 @@ function sortAscending() {
   displayCards(sortedProducts);
 }
 
-// Event listeners for sorting
 ascendingFilter.addEventListener("click", sortAscending);
 descendingFilter.addEventListener("click", sortDescending);
 
-// Category selection event listeners
 categDiv.forEach((div) => {
   div.addEventListener("click", function () {
     categDiv.forEach((el) => el.classList.remove("active-categ"));
