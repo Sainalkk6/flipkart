@@ -1,4 +1,5 @@
-const url = 'https://real-time-flipkart-api.p.rapidapi.com/products-by-category?category_id=tyy%2C4io&page=10';
+const url =
+  "https://real-time-flipkart-api.p.rapidapi.com/products-by-category?category_id=tyy%2C4io&page=10";
 const brandFilter = document.querySelector(".brand-bucket");
 const filterBox = document.querySelector(".filter-indicator-content");
 const clearBrandFilter = document.querySelector(".clear-brand-filter");
@@ -18,24 +19,33 @@ const hider2 = document.querySelector(".modal2");
 const brandMain = document.querySelector(".brand-section-bottom");
 const count = document.querySelector(".count span");
 const ratingInputs = document.querySelectorAll(".rating-content-inner input");
-const ratingContent = document.querySelector('.rating-content');
-const ratingContent1 = document.querySelector('.rating-content1');
-const memoryContent = document.querySelector('.memory-content');
+const ratingContent = document.querySelector(".rating-content");
+const ratingContent1 = document.querySelector(".rating-content1");
+const memoryContent = document.querySelector(".memory-content");
+const searchResultCount = document.querySelector(".main-result");
+const searchBar = document.querySelector(".form-inner input");
+const popularity = document.getElementById("popularity");
+const percentage = document.querySelectorAll(".percentage");
+const discountInput = document.querySelectorAll(
+  ".discount-content-inner input"
+);
 
 let productsData = [];
 let filterBased = [];
 let priceRange = { min: 0, max: Infinity };
 let ratingRange = [];
+let discountArr = [];
+let brands = [];
 let ramRange = [];
 
 hider1.addEventListener("click", function () {
   hider1.classList.toggle("active-modal");
-  ratingContent.classList.toggle('hidden');
+  ratingContent.classList.toggle("hidden");
 });
 
 hider2.addEventListener("click", function () {
   hider2.classList.toggle("active-modal");
-  ratingContent1.classList.toggle('hidden');
+  ratingContent1.classList.toggle("hidden");
 });
 
 options.forEach((option) => {
@@ -67,6 +77,21 @@ async function getPhoneDetails() {
   }
 }
 
+searchBar.addEventListener("input", (e) => {
+  e.preventDefault();
+  searchResultCount.innerHTML = "";
+  const span = document.createElement("span");
+  span.innerHTML = `Showing 1 - ${productsData.length} of ${productsData.length} results for "${e.target.value}"`;
+  searchResultCount.appendChild(span);
+});
+
+// clearFilter.addEventListener('click',()=>{
+//   clearFilter.classList.toggle('hidden')
+//   clearBrandFilter.classList.toggle('hidden')
+// })
+
+// clearBrandFilter.addEventListener('click',()=>clearBrandFilter.classList.toggle('hidden'))
+
 select.addEventListener("change", () => {
   priceRange.max = parseFloat(select.value) || Infinity;
   applyFilters();
@@ -84,10 +109,21 @@ ratingInputs.forEach((input) => {
   });
 });
 
+
+
+discountInput.forEach((input) => {
+  input.addEventListener("change", () => {
+    updateDiscountArr();
+    applyFilters();
+  });
+});
+
 function createFilter(mobiles) {
   brandFilter.innerHTML = "";
-  memoryContent.innerHTML = "";
-  const memorySet = new Set();
+  // memoryContent.innerHTML = "";
+  // const memorySet = new Set();
+
+  const percentageSet = new Set();
   const brandSet = new Set();
 
   mobiles.forEach((mobile) => {
@@ -96,26 +132,42 @@ function createFilter(mobiles) {
       const mobileTicker = document.createElement("div");
       mobileTicker.classList.add("brand-name");
 
-      const html =
-        `<label class="brand-label">
-          <input type="checkbox" class="checkbox" value="${mobile.brand}">
+      const html = `<label class="brand-label">
+          <input type="checkbox" class="checkbox" value="${mobile.brand}" data-value = "${mobile.brand}">
           <span class="brand-name-target">${mobile.brand}</span>
         </label>`;
 
       mobileTicker.insertAdjacentHTML("beforeend", html);
       brandFilter.appendChild(mobileTicker);
-    }
 
-    const ram = mobile.highlights[0]?.slice(0, 5);
-    if (ram && !memorySet.has(ram)) {
-      memorySet.add(ram);
-      const html =
-        `<div class="memory-content-inner">
-          <input type="checkbox" class="checkbox" data-value='${mobile.highlights[0].slice(0, 1)}' value='${ram}'>
-          <span class="span">${ram}</span>
-        </div>`;
-      memoryContent.insertAdjacentHTML('beforeend', html);
+      const brandInput = mobileTicker.querySelectorAll("input");
+
+      brandInput.forEach((input) => {
+        input.addEventListener("change", () => {
+          updateBrand();
+          applyFilters();
+        });
+      });
+
+      function updateBrand() {
+        brands = [];
+        brandInput.forEach((input) => {
+          if (input.checked) {
+            const value = input.getAttribute("data-value");
+            if (value) {
+              brands.push(value);
+            }
+          }
+        });
+      }
     }
+  });
+
+  percentage.forEach((percen) => {
+    percen.addEventListener("change", (e) => {
+      let newPercentage = e.target.value;
+      newPercentage = newPercentage.slice(0, 2);
+    });
   });
 
   document.querySelectorAll(".checkbox").forEach((checkbox) => {
@@ -132,7 +184,10 @@ function createFilter(mobiles) {
     });
   });
 
-  clearBrandFilter.addEventListener("click", () => clearFilters());
+  clearBrandFilter.addEventListener("click", () => {
+    clearFilters();
+    clearBrandFilter.classList.toggle("hidden");
+  });
   clearFilter.addEventListener("click", () => clearFilters());
 
   hider.addEventListener("click", function () {
@@ -142,11 +197,25 @@ function createFilter(mobiles) {
   });
 }
 
+
+
+function updateDiscountArr() {
+  discountArr = [];
+  discountInput.forEach((input) => {
+    if (input.checked) {
+      const value = input.getAttribute("data-value");
+      if (value) {
+        discountArr.push(value);
+      }
+    }
+  });
+}
+
 function updateRatingRange() {
   ratingRange = [];
-  ratingInputs.forEach(input => {
+  ratingInputs.forEach((input) => {
     if (input.checked) {
-      const value = parseInt(input.getAttribute('data-value'), 10);
+      const value = parseInt(input.getAttribute("data-value"), 10);
       if (value) {
         ratingRange.push(value);
       }
@@ -157,15 +226,14 @@ function updateRatingRange() {
 function updateFilters() {
   filterBox.innerHTML = "";
   filterIndicator.classList.remove("hidden");
-  clearFilter.classList.toggle("hidden", filterBased.length === 0 && ratingRange.length === 0 && priceRange.min === 0 && priceRange.max === Infinity);
+  clearFilter.classList.toggle("hidden",filterBased.length === 0 && ratingRange.length === 0 && priceRange.min === 0 && brands.length === 0 && priceRange.max === Infinity);
   clearBrandFilter.classList.toggle("hidden", filterBased.length === 0);
 
   filterBased.forEach((brand) => {
     const filter = document.createElement("div");
     filter.classList.add("filter");
     filter.setAttribute("data-brand", brand);
-    filter.innerHTML =
-      `<span class="close-btn">✕</span>
+    filter.innerHTML = `<span class="close-btn">✕</span>
       <span class="brand-name-1">${brand}</span>`;
     filterBox.appendChild(filter);
 
@@ -187,27 +255,47 @@ function clearFilters() {
   priceRange = { min: 0, max: Infinity };
   ratingRange = [];
   ramRange = [];
+  brands =[]
+  clearBrandFilter.classList.toggle("hidden");
+  clearFilter.classList.toggle("hidden");
   document.querySelectorAll(".checkbox").forEach((checkbox) => (checkbox.checked = false));
   document.querySelectorAll(".rating-content-inner input").forEach((input) => (input.checked = false));
-  select.value = '';
-  selectMin.value = '';
+  select.value = "";
+  selectMin.value = "";
   applyFilters();
+  displayCards(productsData);
 }
 
+createFilter(productsData);
+
 function applyFilters() {
-  const ramMatch = highlights => highlights.some(hi => parseInt(hi) >= 6);
+  const discountedMobiles = productsData.filter((mobile) => {
+    const ogPrice = mobile.mrp;
+    const offPrice = mobile.price;
+    const percentage = Number(Math.ceil(((ogPrice - offPrice) / ogPrice) * 100));
+    let discount = discountArr[0];
+    discount = +discount;
+    const discounted = percentage >= discount;
+    return discounted;
+  });
+
+  const mobill = discountedMobiles.map((m) => m.brand);
 
   const filteredMobiles = productsData.filter((mobile) => {
-    const brandMatch = filterBased.length === 0 || filterBased.includes(mobile.brand);
+    const ogPrice = mobile.mrp;
+    const offPrice = mobile.price;
+    const percentage = Number(Math.ceil(((ogPrice - offPrice) / ogPrice) * 100));
+    const brandMatch = brands.length === 0 || brands.includes(mobile.brand);
     const priceMatch = mobile.price >= priceRange.min && mobile.price <= priceRange.max;
-    const ramMatchResult = ramMatch(mobile.highlights);
+    const discountMatch =discountArr.length === 0 || discountArr.some((discount) => percentage >= +discount);
 
-    return brandMatch && priceMatch && ramMatchResult;
+    return discountMatch && brandMatch && priceMatch;
   });
 
   console.log(filteredMobiles);
-  displayCards(filteredMobiles);
+  filteredMobiles.length === 0 ? displayCards(productsData) : displayCards(filteredMobiles);
 }
+
 
 function displayCards(data) {
   mobileCard.innerHTML = "";
@@ -230,7 +318,9 @@ function createCard(result) {
               <span>Add to Compare</span>
             </div>
             <div class="heart">
-              <svg id="heart-${result.id}" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" class="N1bADF" width="16" height="16" viewBox="0 0 20 16">
+              <svg id="heart-${
+                result.id
+              }" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" class="N1bADF" width="16" height="16" viewBox="0 0 20 16">
                 <path d="M8.695 16.682C4.06 12.382 1 9.536 1 6.065 1 3.219 3.178 1 5.95 1c1.566 0 3.069.746 4.05 1.915C10.981 1.745 12.484 1 14.05 1 16.822 1 19 3.22 19 6.065c0 3.471-3.06 6.316-7.695 10.617L10 17.897l-1.305-1.215z" fill="#C2C2C2" class="x1UMqG" stroke="#FFFFFF" fill-rule="evenodd" opacity=".9"></path>
               </svg>
             </div>
@@ -249,7 +339,9 @@ function createCard(result) {
               </div>
               <div class="mobile-features">
                 <ul>
-                  ${result.highlights.map(h => `<li class="points">${h}</li>`).join("")}
+                  ${result.highlights
+                    .map((h) => `<li class="points">${h}</li>`)
+                    .join("")}
                 </ul>
               </div>
             </div>
@@ -257,7 +349,9 @@ function createCard(result) {
               <div class="price-top">
                 <span>₹${offPrice.toLocaleString()}</span>
                 <div class="real-price">₹${ogPrice.toLocaleString()}</div>
-                <div class="off"><span>${Math.ceil(((ogPrice - offPrice) / ogPrice) * 100)}% off</span></div>
+                <div class="off"><span>${Math.ceil(
+                  ((ogPrice - offPrice) / ogPrice) * 100
+                )}% off</span></div>
                 <div class="delivery"><span>Free delivery</span></div>
               </div>
               <div class="f-assure"><img src="assets/img/fassure.png" alt=""></div>
@@ -282,6 +376,13 @@ function sortAscending() {
   displayCards(sortedProducts);
 }
 
+function sortPopular() {
+  const sortedProducts = [...productsData].sort(
+    (a, b) => b.rating.average - a.rating.average
+  );
+  displayCards(sortedProducts);
+}
+popularity.addEventListener("click", sortPopular);
 ascendingFilter.addEventListener("click", sortAscending);
 descendingFilter.addEventListener("click", sortDescending);
 
