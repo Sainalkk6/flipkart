@@ -59,16 +59,6 @@
             "battery": "600 mAh",
             "processor": "Exynos"
         },
-
-        {
-            "id": "1",
-            "brand": "htc",
-            "model": "F14 5G",
-            "ram": "4gb",
-            "screen":"16.76cm",
-            "battery": "600 mAh",
-            "processor": "Exynos"
-        },
         {
             "id": "1",
             "brand": "hcl",

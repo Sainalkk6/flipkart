@@ -1,5 +1,4 @@
-const url =
-  "https://real-time-flipkart-api.p.rapidapi.com/products-by-category?category_id=tyy%2C4io&page=10";
+const url = "https://real-time-flipkart-api.p.rapidapi.com/products-by-category?category_id=tyy%2C4io&page=14";
 const brandFilter = document.querySelector(".brand-bucket");
 const filterBox = document.querySelector(".filter-indicator-content");
 const clearBrandFilter = document.querySelector(".clear-brand-filter");
@@ -26,9 +25,8 @@ const searchResultCount = document.querySelector(".main-result");
 const searchBar = document.querySelector(".form-inner input");
 const popularity = document.getElementById("popularity");
 const percentage = document.querySelectorAll(".percentage");
-const discountInput = document.querySelectorAll(
-  ".discount-content-inner input"
-);
+const discountInput = document.querySelectorAll(".discount-content-inner input");
+const ramInput = document.querySelectorAll('.memory-content-inner input')
 
 let productsData = [];
 let filterBased = [];
@@ -37,6 +35,7 @@ let ratingRange = [];
 let discountArr = [];
 let brands = [];
 let ramRange = [];
+let arr = ['a','c','d','e','f','h','i','j','k','l','o','p','q','r','s','u','v','w','x','y','z',' ','g','b','m']
 
 hider1.addEventListener("click", function () {
   hider1.classList.toggle("active-modal");
@@ -48,12 +47,12 @@ hider2.addEventListener("click", function () {
   ratingContent1.classList.toggle("hidden");
 });
 
-options.forEach((option) => {
-  option.addEventListener("click", () => {
-    // Handle option click
-    console.log(option.value);
-  });
-});
+// options.forEach((option) => {
+//   option.addEventListener("click", () => {
+//     // Handle option click
+//     console.log(option.value);
+//   });
+// });
 
 async function getPhoneDetails() {
   const options = {
@@ -70,12 +69,19 @@ async function getPhoneDetails() {
     productsData = result.products;
     console.log(productsData);
 
+    searchResultCount.innerHTML = "";
+
+    const span = document.createElement("span");
+    span.innerHTML = `Showing 1 - ${productsData.length} of ${productsData.length} results for "${searchBar.value}"`;
+    searchResultCount.appendChild(span);
+
     createFilter(productsData);
     displayCards(productsData);
   } catch (error) {
     console.error(error);
   }
 }
+
 
 searchBar.addEventListener("input", (e) => {
   e.preventDefault();
@@ -109,6 +115,13 @@ ratingInputs.forEach((input) => {
   });
 });
 
+ramInput.forEach(input=>{
+  input.addEventListener('change',()=>{
+    ramUpdate()
+    applyFilters()
+  })
+})
+
 
 
 discountInput.forEach((input) => {
@@ -118,13 +131,15 @@ discountInput.forEach((input) => {
   });
 });
 
+const brandSet = new Set();
+
+
 function createFilter(mobiles) {
   brandFilter.innerHTML = "";
   // memoryContent.innerHTML = "";
   // const memorySet = new Set();
 
   const percentageSet = new Set();
-  const brandSet = new Set();
 
   mobiles.forEach((mobile) => {
     if (!brandSet.has(mobile.brand)) {
@@ -149,17 +164,7 @@ function createFilter(mobiles) {
         });
       });
 
-      function updateBrand() {
-        brands = [];
-        brandInput.forEach((input) => {
-          if (input.checked) {
-            const value = input.getAttribute("data-value");
-            if (value) {
-              brands.push(value);
-            }
-          }
-        });
-      }
+      
     }
   });
 
@@ -190,13 +195,28 @@ function createFilter(mobiles) {
   });
   clearFilter.addEventListener("click", () => clearFilters());
 
-  hider.addEventListener("click", function () {
-    hider.classList.toggle("active-modal");
-    brandMain.classList.toggle("hidden");
-    count.textContent = count.textContent === `${brandSet.size} MORE` ? "0 MORE" : `${brandSet.size} MORE`;
-  });
+  
 }
 
+function updateBrand() {
+  brands = [];
+  document.querySelectorAll('.brand-bucket input:checked').forEach((input) => {
+    if (input.checked) {
+      const value = input.getAttribute("data-value");
+      if (value) {
+        brands.push(value);
+      }
+    }
+  });
+
+  
+}
+
+hider.addEventListener("click", function () {
+  hider.classList.toggle("active-modal");
+  brandMain.classList.toggle("hidden");
+  count.textContent = count.textContent === `${brandSet.size} MORE` ? "0 MORE" : `${brandSet.size} MORE`;
+});
 
 
 function updateDiscountArr() {
@@ -221,6 +241,18 @@ function updateRatingRange() {
       }
     }
   });
+}
+
+function ramUpdate(){
+  ramRange = []
+  ramInput.forEach((input) => {
+    if(input.checked){
+      const value = parseInt(input.getAttribute("data-value"), 10)
+      if(value){
+        ramRange.push(value)
+      }
+    }
+  })
 }
 
 function updateFilters() {
@@ -266,36 +298,39 @@ function clearFilters() {
   displayCards(productsData);
 }
 
-createFilter(productsData);
+// createFilter(productsData);
 
 function applyFilters() {
-  const discountedMobiles = productsData.filter((mobile) => {
-    const ogPrice = mobile.mrp;
-    const offPrice = mobile.price;
-    const percentage = Number(Math.ceil(((ogPrice - offPrice) / ogPrice) * 100));
-    let discount = discountArr[0];
-    discount = +discount;
-    const discounted = percentage >= discount;
-    return discounted;
-  });
-
-  const mobill = discountedMobiles.map((m) => m.brand);
+  
 
   const filteredMobiles = productsData.filter((mobile) => {
     const ogPrice = mobile.mrp;
     const offPrice = mobile.price;
     const percentage = Number(Math.ceil(((ogPrice - offPrice) / ogPrice) * 100));
-    const brandMatch = brands.length === 0 || brands.includes(mobile.brand);
+    const brandMatch =   filterBased.includes(mobile.brand) || brands.length === 0 ;
     const priceMatch = mobile.price >= priceRange.min && mobile.price <= priceRange.max;
     const discountMatch =discountArr.length === 0 || discountArr.some((discount) => percentage >= +discount);
+    const ratingMatch = ratingRange.length === 0 ||  ratingRange.some(rating=> mobile.rating.average >= rating )
 
-    return discountMatch && brandMatch && priceMatch;
+    let ramFilter = mobile.highlights[0].toLowerCase().slice(0,6)
+    ramFilter = [...ramFilter].filter(item=> !arr.includes(item))
+    ramFilter = ramFilter.toString().replaceAll(',','')
+    ramFilter = +ramFilter
+
+    const ramMatch = ramRange.length === 0 || ramRange.some(ram=> ramFilter>= ram)
+    
+
+    
+
+
+    return discountMatch && priceMatch && ratingMatch && ramMatch  && brandMatch
   });
-
+  console.log(filterBased)
+  console.log(brands)
   console.log(filteredMobiles);
-  filteredMobiles.length === 0 ? displayCards(productsData) : displayCards(filteredMobiles);
+  // filteredMobiles.length === 0 ? displayCards(productsData) : displayCards(filteredMobiles);
+  displayCards(filteredMobiles);
 }
-
 
 function displayCards(data) {
   mobileCard.innerHTML = "";
@@ -365,6 +400,8 @@ function createCard(result) {
 
   mobileCard.insertAdjacentHTML("beforeend", html);
 }
+
+
 
 function sortDescending() {
   const sortedProducts = [...productsData].sort((a, b) => b.price - a.price);
